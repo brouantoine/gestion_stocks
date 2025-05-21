@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Box, Typography } from '@mui/material';
-import api from '../../api/api';
+import api from '../../services/api';
 
 export default function Login() {
   const [credentials, setCredentials] = useState({ username: '', password: '' });

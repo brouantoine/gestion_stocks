@@ -59,6 +59,7 @@ import DetailCommande from './pages/commandes/DetailCommande';
 import Dashboard from './pages/Dashboard/Dashboard';
 import ClientList from './pages/Clients/ClientList';
 import ClientDetail from './pages/Clients/ClientDetail';
+import Login from './pages/auth/Login'
 function App() {
   return (
     <Routes>
@@ -66,6 +67,7 @@ function App() {
       <Route path="*" element={
         <NavBar>
           <Routes>
+            <Route path='/login' element={<Login />}/>
             <Route path="/produits" element={<ProduitList />} />
             <Route path="/commandes" element={<CommandeList />} />
             <Route path="/commandes/nouveau" element={<NouvelleCommande />} />

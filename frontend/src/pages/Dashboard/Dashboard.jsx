@@ -5,7 +5,6 @@ import {
   ShoppingOutlined, 
   UnorderedListOutlined,
   UserOutlined,
-  FileAddOutlined,
   PieChartOutlined,
   DollarOutlined
 } from '@ant-design/icons';
@@ -40,13 +39,6 @@ const Dashboard = () => {
       description: 'Gestion des clients'
     },
     { 
-      title: 'Nouvelle Commande', 
-      icon: <FileAddOutlined style={{ fontSize: '32px' }} />,
-      path: '/commandes/nouveau',
-      color: token.colorError,
-      description: 'Créer une nouvelle commande'
-    },
-    { 
       title: 'Statistiques', 
       icon: <PieChartOutlined style={{ fontSize: '32px' }} />,
       path: '/stats',
@@ -61,7 +53,6 @@ const Dashboard = () => {
       description: 'Tableau des ventes'
     }
   ];
-
   return (
     <div style={{ 
       padding: '24px', 

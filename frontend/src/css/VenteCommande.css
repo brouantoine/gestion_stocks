@@ -63,3 +63,29 @@
   text-align: right;
   font-weight: bold;
 }
+
+
+/* Animation pour les transitions */
+.MuiPaper-root {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.MuiPaper-root:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Style personnalisé pour les boutons */
+.MuiButton-contained {
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* Style pour les tables */
+.MuiTable-root {
+  min-width: 650px;
+}
+
+/* Style pour les inputs */
+.MuiOutlinedInput-root {
+  border-radius: 8px;
+}

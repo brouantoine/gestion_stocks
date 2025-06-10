@@ -1,41 +1,57 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Box, 
+  TextField, 
+  Autocomplete,
+  CircularProgress,
+  Typography
+} from '@mui/material';
+import { Person } from '@mui/icons-material';
 
 const ClientSelector = ({ selectedClient, setSelectedClient, isDirectSale }) => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/clients/')
-      .then(res => res.json())
-      .then(data => {
+    const fetchClients = async () => {
+      try {
+        const response = await fetch('/api/clients/');
+        const data = await response.json();
         setClients(data);
+      } catch (error) {
+        console.error("Erreur de chargement des clients:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchClients();
   }, []);
 
   return (
-    <div className="client-selector">
-      <h3>Client</h3>
+    <Box>
       {loading ? (
-        <p>Chargement des clients...</p>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+          <CircularProgress size={24} />
+        </Box>
       ) : (
-        <select
-          value={selectedClient?.id || ''}
-          onChange={(e) => {
-            const selected = clients.find(c => c.id === parseInt(e.target.value));
-            setSelectedClient(selected || null);
-          }}
+        <Autocomplete
+          options={clients}
+          getOptionLabel={(option) => option.nom_client}
+          value={isDirectSale ? null : selectedClient}
+          onChange={(_, newValue) => setSelectedClient(newValue)}
           disabled={isDirectSale}
-        >
-          <option value="">{isDirectSale ? "Client Direct (par défaut)" : "Sélectionnez un client"}</option>
-          {clients.map(client => (
-            <option key={client.id} value={client.id}>
-              {client.nom_client}
-            </option>
-          ))}
-        </select>
+          renderInput={(params) => (
+            <TextField 
+              {...params} 
+              label={isDirectSale ? "Client Direct (par défaut)" : "Sélectionnez un client"} 
+              variant="outlined" 
+              size="small"
+              fullWidth
+            />
+          )}
+        />
       )}
-    </div>
+    </Box>
   );
 };
 

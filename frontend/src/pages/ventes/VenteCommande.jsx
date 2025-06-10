@@ -1,11 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { 
+  Box, 
+  Typography, 
+  Paper, 
+  Grid, 
+  Divider, 
+  Button,
+  TextField,
+  Select,
+  MenuItem,
+  InputAdornment,
+  IconButton,
+  Tooltip,
+  Alert,
+  CircularProgress
+} from '@mui/material';
+import {
+  Add,
+  Delete,
+  Refresh,
+  LocalMall,
+  PointOfSale,
+  Person,
+  AttachMoney,
+  Percent,
+  ShoppingCart
+} from '@mui/icons-material';
 import ClientSelector from './ClientSelector';
 import TypeSelector from './TypeSelector';
 import ProductAdder from './ProductAdder';
 import ProductList from './ProductList';
-import SubmitButton from '../../components/button/SubmitButton';
-import '../../css/VenteCommande.css'
+
 const VenteCommande = () => {
   const [typeTransaction, setTypeTransaction] = useState('VENTE_DIRECTE');
   const [client, setClient] = useState(null);
@@ -15,6 +41,10 @@ const VenteCommande = () => {
   const [discount, setDiscount] = useState(0);
   const [defaultClient, setDefaultClient] = useState(null);
   const [tva, setTva] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
   useEffect(() => {
     const fetchDefaultClient = async () => {
       try {
@@ -46,14 +76,22 @@ const VenteCommande = () => {
   const handleAddProduct = () => {
     if (!selectedProduct) return;
     
-    const newItem = {
-      product: selectedProduct,
-      quantity,
-      unitPrice: selectedProduct.prix_vente,
-      discount
-    };
-
-    setProducts([...products, newItem]);
+    const existingIndex = products.findIndex(p => p.product.id === selectedProduct.id);
+    
+    if (existingIndex >= 0) {
+      const updatedProducts = [...products];
+      updatedProducts[existingIndex].quantity += quantity;
+      setProducts(updatedProducts);
+    } else {
+      const newItem = {
+        product: selectedProduct,
+        quantity,
+        unitPrice: selectedProduct.prix_vente,
+        discount
+      };
+      setProducts([...products, newItem]);
+    }
+    
     resetProductForm();
   };
 
@@ -69,9 +107,17 @@ const VenteCommande = () => {
 
   const handleSubmit = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       if ((!client || products.length === 0) && typeTransaction !== 'VENTE_DIRECTE') {
-        alert("Veuillez sélectionner un client et ajouter des produits");
-        return;
+        throw new Error("Veuillez sélectionner un client et ajouter des produits");
+      }
+
+      for (const item of products) {
+        if (item.product.quantite_stock < item.quantity) {
+          throw new Error(`Stock insuffisant pour ${item.product.designation} (Stock disponible: ${item.product.quantite_stock})`);
+        }
       }
 
       const payload = {
@@ -99,79 +145,166 @@ const VenteCommande = () => {
       );
 
       if (response.status === 201) {
-        alert("Transaction enregistrée avec succès!");
+        setSuccess("Transaction enregistrée avec succès!");
         setClient(typeTransaction === 'VENTE_DIRECTE' ? defaultClient : null);
         setProducts([]);
       }
     } catch (error) {
+      setError(error.message);
       console.error("Erreur détaillée:", error.response?.data || error.message);
-      alert("Erreur lors de l'enregistrement. Voir la console pour plus de détails.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const calculateTotal = () => {
+    return products.reduce((total, item) => {
+      return total + (item.quantity * item.unitPrice * (1 - item.discount/100));
+    }, 0);
+  };
+
   return (
-    <div className="vente-container">
-      <h2 className="vente-title">{typeTransaction === 'VENTE_DIRECTE' ? 'Vente Directe' : 'Commande Client'}</h2>
-      
-      <div className="form-section">
-        <h3 className="section-title">Type de Transaction</h3>
-        <TypeSelector 
-          transactionType={typeTransaction}
-          setTransactionType={handleTransactionTypeChange}
-        />
-      </div>
+    <Box sx={{ p: 3 }}>
+      <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+            {typeTransaction === 'VENTE_DIRECTE' ? (
+              <><PointOfSale sx={{ verticalAlign: 'middle', mr: 1 }} /> Vente Directe</>
+            ) : (
+              <><LocalMall sx={{ verticalAlign: 'middle', mr: 1 }} /> Commande Client</>
+            )}
+          </Typography>
+          
+          <Box>
+            <Tooltip title="Actualiser">
+              <IconButton color="primary">
+                <Refresh />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Box>
 
-      <div className="form-section">
-        <h3 className="section-title">Informations Client</h3>
-        <ClientSelector 
-          selectedClient={client}
-          setSelectedClient={setClient}
-          isDirectSale={typeTransaction === 'VENTE_DIRECTE'}
-        />
-      </div>
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
 
-      <div className="form-section">
-        <h3 className="section-title">Paramètres Financiers</h3>
-        <div className="tva-selector">
-          <label>TVA Applicable</label>
-          <select 
-            value={tva}
-            onChange={(e) => setTva(e.target.value)}
-            className="form-control"
+        {success && (
+          <Alert severity="success" sx={{ mb: 3 }}>
+            {success}
+          </Alert>
+        )}
+
+        <Grid container spacing={3}>
+          {/* Section Type de Transaction */}
+          <Grid item xs={12} md={4}>
+            <Paper elevation={1} sx={{ p: 2, height: '100%' }}>
+              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                <PointOfSale sx={{ mr: 1 }} /> Type de Transaction
+              </Typography>
+              <TypeSelector 
+                transactionType={typeTransaction}
+                setTransactionType={handleTransactionTypeChange}
+              />
+            </Paper>
+          </Grid>
+
+          {/* Section Client */}
+          <Grid item xs={12} md={4}>
+            <Paper elevation={1} sx={{ p: 2, height: '100%' }}>
+              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                <Person sx={{ mr: 1 }} /> Informations Client
+              </Typography>
+              <ClientSelector 
+                selectedClient={client}
+                setSelectedClient={setClient}
+                isDirectSale={typeTransaction === 'VENTE_DIRECTE'}
+              />
+            </Paper>
+          </Grid>
+
+          {/* Section Paramètres Financiers */}
+          <Grid item xs={12} md={4}>
+            <Paper elevation={1} sx={{ p: 2, height: '100%' }}>
+              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                <AttachMoney sx={{ mr: 1 }} /> Paramètres Financiers
+              </Typography>
+              <TextField
+                select
+                fullWidth
+                label="TVA Applicable"
+                value={tva}
+                onChange={(e) => setTva(e.target.value)}
+                variant="outlined"
+                size="small"
+              >
+                <MenuItem value={1}>18% (TVA standard)</MenuItem>
+                <MenuItem value={2}>10% (TVA réduite)</MenuItem>
+                <MenuItem value={3}>5.5% (TVA spéciale)</MenuItem>
+              </TextField>
+            </Paper>
+          </Grid>
+
+          {/* Section Ajout de Produits */}
+          <Grid item xs={12} md={5}>
+            <Paper elevation={1} sx={{ p: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                <Add sx={{ mr: 1 }} /> Ajout de Produits
+              </Typography>
+              <ProductAdder
+                selectedProduct={selectedProduct}
+                setSelectedProduct={setSelectedProduct}
+                quantity={quantity}
+                setQuantity={setQuantity}
+                discount={discount}
+                setDiscount={setDiscount}
+                onAdd={handleAddProduct}
+              />
+            </Paper>
+          </Grid>
+
+          {/* Section Détail de la Transaction */}
+          <Grid item xs={12} md={7}>
+            <Paper elevation={1} sx={{ p: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center' }}>
+                <ShoppingCart sx={{ mr: 1 }} /> Détail de la Transaction
+              </Typography>
+              <ProductList 
+                products={products}
+                onRemove={handleRemoveProduct}
+              />
+              
+              {products.length > 0 && (
+                <>
+                  <Divider sx={{ my: 2 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6">Total:</Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                      {calculateTotal().toFixed(2)} F
+                    </Typography>
+                  </Box>
+                </>
+              )}
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Bouton de soumission */}
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <PointOfSale />}
+            onClick={handleSubmit}
+            disabled={loading || (!client && typeTransaction !== 'VENTE_DIRECTE') || products.length === 0}
+            sx={{ px: 4, py: 1.5 }}
           >
-            <option value={1}>18% (TVA standard)</option>
-            <option value={2}>10% (TVA réduite)</option>
-            <option value={3}>5.5% (TVA spéciale)</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="form-section">
-        <h3 className="section-title">Ajout de Produits</h3>
-        <ProductAdder
-          selectedProduct={selectedProduct}
-          setSelectedProduct={setSelectedProduct}
-          quantity={quantity}
-          setQuantity={setQuantity}
-          discount={discount}
-          setDiscount={setDiscount}
-          onAdd={handleAddProduct}
-        />
-      </div>
-
-      <div className="form-section">
-        <ProductList 
-          products={products}
-          onRemove={handleRemoveProduct}
-        />
-      </div>
-
-      <SubmitButton
-        transactionType={typeTransaction}
-        disabled={(!client && typeTransaction !== 'VENTE_DIRECTE') || products.length === 0}
-        onSubmit={handleSubmit}
-      />
-    </div>
+            {typeTransaction === 'VENTE_DIRECTE' ? 'Valider la Vente' : 'Enregistrer la Commande'}
+          </Button>
+        </Box>
+      </Paper>
+    </Box>
   );
 };
 

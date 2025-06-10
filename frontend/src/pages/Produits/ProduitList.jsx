@@ -22,7 +22,10 @@ import {
   DialogActions,
   Button,
   Chip,
-  Snackbar
+  Snackbar,
+  InputAdornment,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import {
   Add,
@@ -39,6 +42,9 @@ import {
 } from '@mui/icons-material';
 import MuiAlert from '@mui/material/Alert';
 import Loading from '../../components/Loading';
+import WarningIcon from '@mui/icons-material/Warning';
+
+
 const ProductActions = ({ product, onView, onEdit, onDelete }) => (
   <Box display="flex" gap={1}>
     <Tooltip title="Voir détails">
@@ -90,20 +96,11 @@ const ProductForm = ({ product, onSave, onCancel }) => {
   };
 
   return (
-    <DialogContent>
+      <DialogContent>
       <Box component="form" onSubmit={(e) => {
         e.preventDefault();
         onSave(formData);
       }} sx={{ mt: 2 }}>
-        <TextField
-          margin="normal"
-          required
-          fullWidth
-          label="Référence"
-          name="reference"
-          value={formData.reference}
-          onChange={handleChange}
-        />
         <TextField
           margin="normal"
           required
@@ -122,6 +119,9 @@ const ProductForm = ({ product, onSave, onCancel }) => {
           type="number"
           value={formData.prix_vente}
           onChange={handleChange}
+          InputProps={{
+            startAdornment: <InputAdornment position="start">F</InputAdornment>,
+          }}
         />
         <TextField
           margin="normal"
@@ -132,22 +132,25 @@ const ProductForm = ({ product, onSave, onCancel }) => {
           type="number"
           value={formData.quantite_stock}
           onChange={handleChange}
+          InputProps={{
+            inputProps: { min: 0 }
+          }}
         />
-        <Select
-          margin="dense"
-          fullWidth
-          label="Unité de mesure"
-          name="unite_mesure"
-          value={formData.unite_mesure}
-          onChange={handleChange}
-          sx={{ mt: 2 }}
-        >
-          <MenuItem value="unite">Unité</MenuItem>
-          <MenuItem value="kg">Kilogramme</MenuItem>
-          <MenuItem value="g">Gramme</MenuItem>
-          <MenuItem value="l">Litre</MenuItem>
-          <MenuItem value="m">Mètre</MenuItem>
-        </Select>
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Unité de mesure</InputLabel>
+          <Select
+            label="Unité de mesure"
+            name="unite_mesure"
+            value={formData.unite_mesure}
+            onChange={handleChange}
+          >
+            <MenuItem value="unite">Unité</MenuItem>
+            <MenuItem value="kg">Kilogramme</MenuItem>
+            <MenuItem value="g">Gramme</MenuItem>
+            <MenuItem value="l">Litre</MenuItem>
+            <MenuItem value="m">Mètre</MenuItem>
+          </Select>
+        </FormControl>
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
           <Button onClick={onCancel} variant="outlined">
             Annuler
@@ -587,7 +590,36 @@ function ProduitList() {
                     sx={{ fontWeight: 'bold' }}
                   />
                 </TableCell>
-                
+                            <TableCell align="right">
+              <Box display="flex" alignItems="center" justifyContent="flex-end" gap={1}>
+                {produit.quantite_stock <= 5 && (
+                  <Tooltip title="Stock critique">
+                    <WarningIcon fontSize="small" color="warning" />
+                  </Tooltip>
+                )}
+                <Chip
+                  label={
+                    produit.quantite_stock === 0 
+                      ? "RUPTURE" 
+                      : produit.quantite_stock <= 5 
+                      ? `${produit.quantite_stock}` 
+                      : produit.quantite_stock
+                  }
+                  color={
+                    produit.quantite_stock === 0 
+                      ? 'default' 
+                      : produit.quantite_stock <= 5 
+                      ? 'error' 
+                      : 'success'
+                  }
+                  size="small"
+                  sx={{ 
+                    fontWeight: 'bold',
+                    opacity: produit.quantite_stock === 0 ? 0.8 : 1,
+                  }}
+                />
+              </Box>
+            </TableCell>
                 <TableCell>
                   <Chip 
                     label={produit.unite_mesure} 

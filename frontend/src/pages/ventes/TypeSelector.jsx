@@ -1,34 +1,31 @@
 import React from 'react';
+import { Box, ButtonGroup, Button, Typography } from '@mui/material';
+import { PointOfSale, LocalMall } from '@mui/icons-material';
 
-const TypeSelector = ({ transactionType, setTransactionType, includeAllOption = false }) => (
-  <div className="type-selector">
-    {includeAllOption && (
-      <label>
-        <input
-          type="radio"
-          checked={transactionType === 'TOUS'}
-          onChange={() => setTransactionType('TOUS')}
-        />
-        Tous types
-      </label>
-    )}
-    <label>
-      <input
-        type="radio"
-        checked={transactionType === 'VENTE_DIRECTE'}
-        onChange={() => setTransactionType('VENTE_DIRECTE')}
-      />
-      Vente Directe
-    </label>
-    <label>
-      <input
-        type="radio"
-        checked={transactionType === 'COMMANDE'}
-        onChange={() => setTransactionType('COMMANDE')}
-      />
-      Commande Client
-    </label>
-  </div>
-);
+const TypeSelector = ({ transactionType, setTransactionType }) => {
+  return (
+    <Box>
+      <Typography variant="subtitle2" color="textSecondary" sx={{ mb: 1 }}>
+        Sélectionnez le type de transaction:
+      </Typography>
+      <ButtonGroup fullWidth>
+        <Button
+          variant={transactionType === 'VENTE_DIRECTE' ? 'contained' : 'outlined'}
+          onClick={() => setTransactionType('VENTE_DIRECTE')}
+          startIcon={<PointOfSale />}
+        >
+          Vente Directe
+        </Button>
+        <Button
+          variant={transactionType === 'COMMANDE' ? 'contained' : 'outlined'}
+          onClick={() => setTransactionType('COMMANDE')}
+          startIcon={<LocalMall />}
+        >
+          Commande
+        </Button>
+      </ButtonGroup>
+    </Box>
+  );
+};
 
 export default TypeSelector;

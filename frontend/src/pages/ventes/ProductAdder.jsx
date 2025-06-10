@@ -1,5 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import '../../css/VenteCommande.css'
+import React, { useState, useEffect } from 'react';
+import { 
+  Box, 
+  TextField, 
+  Select, 
+  MenuItem, 
+  InputLabel, 
+  FormControl, 
+  Button,
+  CircularProgress,
+  Typography,
+  Autocomplete,
+  InputAdornment
+} from '@mui/material';
+import { Add } from '@mui/icons-material';
 
 const ProductAdder = ({
   selectedProduct,
@@ -14,73 +27,86 @@ const ProductAdder = ({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/produits/')
-      .then(res => res.json())
-      .then(data => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('/api/produits/');
+        const data = await response.json();
         setProducts(data);
+      } catch (error) {
+        console.error("Erreur de chargement des produits:", error);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchProducts();
   }, []);
 
-    return (
-    <div className="product-adder">
+  return (
+    <Box>
       {loading ? (
-        <p>Chargement des produits...</p>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+          <CircularProgress size={24} />
+        </Box>
       ) : (
-        <div className="product-form">
-          <div className="form-group">
-            <label>Produit</label>
-            <select
-              value={selectedProduct?.id || ''}
-              onChange={(e) => {
-                const selected = products.find(p => p.id === parseInt(e.target.value));
-                setSelectedProduct(selected || null);
-              }}
-              className="form-control"
-            >
-              <option value="">Sélectionnez un produit</option>
-              {products.map(product => (
-                <option key={product.id} value={product.id}>
-                  {product.designation} - {product.prix_vente}€
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="form-group">
-            <label>Quantité</label>
-            <input
+        <Box sx={{ display: 'grid', gap: 2 }}>
+          <Autocomplete
+            options={products}
+            getOptionLabel={(option) => `${option.designation} - ${option.prix_vente} F`}
+            value={selectedProduct}
+            onChange={(_, newValue) => setSelectedProduct(newValue)}
+            renderInput={(params) => (
+              <TextField 
+                {...params} 
+                label="Rechercher un produit" 
+                variant="outlined" 
+                size="small"
+                fullWidth
+              />
+            )}
+          />
+
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+            <TextField
+              label="Quantité"
               type="number"
               value={quantity}
-              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-              min="1"
-              className="form-control"
+              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+              variant="outlined"
+              size="small"
+              InputProps={{
+                inputProps: { min: 1 }
+              }}
+              fullWidth
             />
-          </div>
-          
-          <div className="form-group">
-            <label>Remise (%)</label>
-            <input
+
+            <TextField
+              label="Remise (%)"
               type="number"
               value={discount}
-              onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-              min="0"
-              max="100"
-              step="0.5"
-              className="form-control"
+              onChange={(e) => setDiscount(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+              variant="outlined"
+              size="small"
+              InputProps={{
+                endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                inputProps: { min: 0, max: 100, step: 0.5 }
+              }}
+              fullWidth
             />
-          </div>
-          
-          <button 
+          </Box>
+
+          <Button
+            variant="contained"
+            startIcon={<Add />}
             onClick={onAdd}
-            className="add-button"
             disabled={!selectedProduct}
+            fullWidth
+            sx={{ mt: 1 }}
           >
             Ajouter au panier
-          </button>
-        </div>
+          </Button>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 

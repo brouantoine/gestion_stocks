@@ -85,7 +85,6 @@ class Produit(models.Model):
     unite_mesure = models.CharField(max_length=10, choices=UNITE_CHOICES, default='unite')
     date_creation = models.DateTimeField(auto_now_add=True)
     est_actif = models.BooleanField(default=True)
-    stock = models.IntegerField(default=0)
     image = models.ImageField(upload_to='produits/', blank=True)
     code_barre = models.CharField(max_length=50, blank=True)
     tva = models.ForeignKey(Taxe, on_delete=models.PROTECT, null=True)

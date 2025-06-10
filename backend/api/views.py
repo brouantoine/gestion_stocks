@@ -344,10 +344,14 @@ class CommandeClientViewSet(viewsets.ModelViewSet):
                 remise_ligne=line.get('remise_ligne', 0)
             )
             
-            if is_vente_directe:
-                produit = Produit.objects.get(id=line['produit'])
-                produit.stock -= line['quantite']
-                produit.save()
+        if is_vente_directe:
+            produit = Produit.objects.get(id=line['produit'])
+            produit.quantite_stock -= line['quantite']
+            produit.save(update_fields=['quantite_stock'])  # Sauvegarde optimisée
+        
+        # Optionnel : Ajouter une vérification de stock négatif
+        if produit.quantite_stock < 0:
+            raise ValidationError(f"Stock insuffisant pour {produit.designation}")
         
         # Force le calcul du total
         commande.total_commande = commande.total_ttc

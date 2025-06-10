@@ -1,8 +1,22 @@
 # api/serializers.py
 from multiprocessing.connection import Client
 from rest_framework import serializers
-from .models import Produit
+from .models import Produit, Taxe
 from django.core.validators import ValidationError
+
+
+
+
+from rest_framework import serializers
+from .models import Utilisateur
+
+class UtilisateurSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Utilisateur
+        fields = '__all__'  # Ou spécifiez les champs explicitement
+
+
+
 
 class ProduitSerializer(serializers.ModelSerializer):
     class Meta:
@@ -143,3 +157,70 @@ class ClientSerializer(serializers.ModelSerializer):
         if value and len(value) != 14:
             raise serializers.ValidationError("Le SIRET doit contenir exactement 14 chiffres")
         return value
+    
+from rest_framework import serializers
+from .models import Utilisateur
+
+from rest_framework import serializers
+from .models import Utilisateur
+
+class UtilisateurSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Utilisateur
+        fields = '__all__'
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        user = Utilisateur.objects.create_user(
+            username=validated_data['email'],
+            email=validated_data['email'],
+            password=validated_data['password'],
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            role=validated_data.get('role', 'vendeur'),
+            telephone=validated_data.get('telephone', ''),
+            est_actif=validated_data.get('est_actif', True)
+        )
+        return user
+
+
+
+
+from rest_framework import serializers
+from .models import CommandeClient, LigneCommandeClient
+
+class LigneCommandeClientSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LigneCommandeClient
+        fields = '__all__'
+
+# serializers.py
+class LigneCommandeClientSerializer(serializers.ModelSerializer):
+    produit = serializers.PrimaryKeyRelatedField(queryset=Produit.objects.all())
+    
+    class Meta:
+        model = LigneCommandeClient
+        fields = ['produit', 'quantite', 'prix_unitaire', 'remise_ligne']  # Retirer 'tva' si présent
+        extra_kwargs = {
+            'quantite': {'required': True},
+            'prix_unitaire': {'required': True}
+        }
+
+class CommandeClientSerializer(serializers.ModelSerializer):
+    lignes = LigneCommandeClientSerializer(many=True)
+    
+    class Meta:
+        model = CommandeClient
+        fields = '__all__'
+        read_only_fields = ('total_commande',)  # Le total sera calculé côté serveur
+
+    def create(self, validated_data):
+        lignes_data = validated_data.pop('lignes', [])
+        
+        # Création basique de la commande sans les lignes
+        commande = CommandeClient.objects.create(**validated_data)
+        
+        # Les lignes seront ajoutées dans la vue
+        return commande

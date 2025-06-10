@@ -17,6 +17,13 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const dashboardItems = [
+        { 
+      title: 'Ventes', 
+      icon: <DollarOutlined style={{ fontSize: '32px' }} />,
+      path: '/ventecommande',
+      color: token.colorProcessing,
+      description: 'Tableau des ventes'
+    },
     { 
       title: 'Produits', 
       icon: <ShoppingOutlined style={{ fontSize: '32px' }} />,
@@ -24,6 +31,7 @@ const Dashboard = () => {
       color: token.colorPrimary,
       description: 'Gestion du catalogue produits'
     },
+    
     { 
       title: 'Commandes', 
       icon: <UnorderedListOutlined style={{ fontSize: '32px' }} />,
@@ -41,16 +49,16 @@ const Dashboard = () => {
     { 
       title: 'Statistiques', 
       icon: <PieChartOutlined style={{ fontSize: '32px' }} />,
-      path: '/stats',
+      path: '/statistiques',
       color: token.colorInfo,
       description: 'Analytiques des ventes'
     },
     { 
-      title: 'Ventes', 
-      icon: <DollarOutlined style={{ fontSize: '32px' }} />,
-      path: '/ventes',
+      title: 'Utilisateurs', 
+      icon: <UserOutlined style={{ fontSize: '32px' }} />,
+      path: '/utilisateurs',
       color: token.colorProcessing,
-      description: 'Tableau des ventes'
+      description: 'Liste des utilisateurs'
     }
   ];
   return (

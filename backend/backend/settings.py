@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -88,7 +89,7 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
  'default': {
        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'gestion_stock',    # Nom de votre base de données PostgreSQL
+        'NAME': 'gestion_stocks',    # Nom de votre base de données PostgreSQL
        'USER': 'postgres',        # Nom d'utilisateur PostgreSQL
        'PASSWORD':'admin',    # Mot de passse PostgreSQL
       'HOST': '127.0.0.1',    # Adresse IP où PostgreSQL est accessible (localhost ici)
@@ -148,16 +149,24 @@ STATICFILES_DIRS = [
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
-    # Désactive le rendu HTML de l'API
+    'DEFAULT_FILTER_BACKENDS':
+     [ #'django_filters.rest_framework.DjangoFilterBackend',
+    # 'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+
     'DEFAULT_RENDERER_CLASSES': [
-        'rest_framework.renderers.JSONRenderer',
-        # Commentez ou supprimez la ligne suivante pour désactiver l'interface web
-        # 'rest_framework.renderers.BrowsableAPIRenderer',
-        
+        'rest_framework.renderers.JSONRenderer', 
     ]
 }
 
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
+
+CORS_ALLOW_ALL_ORIGINS = True 
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3001",
@@ -191,3 +200,4 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
